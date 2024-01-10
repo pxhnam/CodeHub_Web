@@ -1,0 +1,214 @@
+﻿
+@{
+    ViewBag.Title = "Type";
+}
+<div class="row">
+    <div class="col-12 py-5 d-flex justify-content-between align-items-center">
+        <h4>Thể Loại</h4>
+        <button type="button"
+                class="btn btn-primary"
+                id="btnCreate"
+                data-bs-toggle="modal"
+                data-bs-target="#staticBackdrop">
+            Thêm
+        </button>
+    </div>
+</div>
+<div class="row table-bordered">
+    <div class="col-lg-12">
+        <div class="grid">
+            <p class="grid-header">Danh sách thể loại</p>
+            <div class="item-wrapper d-flex justify-content-center align-items-center">
+                <div class="table-responsive col-lg-6">
+                    <div class="form-group">
+                        <label for="inputSearch">Tìm kiếm</label>
+                        <input type="text" class="form-control" id="inputSearch" placeholder="Nhập từ khóa...">
+                    </div>
+                    <table class="table info-table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center align-items-center py-5">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script type="text/javascript">
+        let typingTimer;
+        const inputSearch = $('#inputSearch');
+        var saveID;
+        var currentPage = 1;
+        $(document).ready(function () {
+            loadData(inputSearch.val(), currentPage);
+        });
+
+        function loadData(search, page) {
+            $('tbody').empty();
+            $.ajax({
+                url: '@Url.Action("getTypes", "API")',
+                type: 'POST',
+                data: { search, page },
+                success: function (res) {
+                    if (res.success) {
+                        $('.table-responsive').find('.text-notification').remove();
+                        $('.pagination').empty();
+                        if (res.list.length > 0) {
+                            $.each(res.list, (index, item) => {
+                                $('tbody').append(columnInTable(item.ID, item.Name));
+                            });
+                            if (res.numPage > 1) {
+                                for (i = 1; i <= res.numPage; i++) {
+                                    $('.pagination').append(`<li class="page-item${i == currentPage ? ' active' : ' '}"><a class="page-link" href="#">${i}</a></li>`);
+                                }
+                            }
+                        } else {
+                            $('.table-responsive').append(`<p class="text-center text-notification">Không tìm thấy !</p>`)
+                        }
+                    } else {
+                    }
+                }
+            })
+        }
+
+        inputSearch.on('input', function () {
+            currentPage = 1;
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(function () {
+                loadData(inputSearch.val(), currentPage)
+            }, 500);
+        });
+
+        $('.pagination').on('click', 'li', function (e) {
+            e.preventDefault();
+            currentPage = $(this).text();
+            loadData(inputSearch.val(), currentPage);
+         })
+
+        $('#btnCreate').on('click', function () {
+            saveID = 0;
+            let tagInput = `<div class="form-group">
+                            <label for="inputType">Type</label>
+                            <input type="text" class="form-control" id="inputType" placeholder="Enter your type" autocomplete = "off">
+                            </div>`;
+            createModal('Thêm thể loại', tagInput, 'Thêm', 'Đóng')
+        });
+        $(document).on('click', '#btnEdit', function () {
+            let parent = $(this).closest('tr');
+            saveID = parent.data('id');
+            $.ajax({
+                url: '@Url.Action("getType", "API")',
+                type: 'POST',
+                data: { ID: saveID },
+                success: function (res) {
+                    if (res.success) {
+                        let tagInput = `<div class="form-group">
+                                            <label for="inputType">Type</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="inputType"
+                                                   placeholder="Enter your type"
+                                                   value="${res.type.Name}" 
+                                                   autocomplete = "off">
+                                        </div>`;
+                        createModal('Sửa thể loại', tagInput, 'Sửa', 'Đóng')
+                    } else {
+                        process(false, 'Thêm')
+                        textDanger(res.msg)
+                    }
+                }
+            });
+        });
+
+
+        $('#btnOk').on('click', () => {
+            process(true);
+            if (saveID === 0) {
+                $.ajax({
+                    url: '@Url.Action("createType", "API")',
+                    type: 'POST',
+                    data: { Name: $('#inputType').val() },
+                    success: function (res) {
+                        if (res.success) {
+                            loadData(inputSearch.val(), currentPage);
+                            $('#staticBackdrop').modal('hide');
+                        } else {
+                            process(false, 'Thêm')
+                            textDanger(res.msg)
+                        }
+                    }
+                });
+            } else {
+                $.ajax({
+                    url: '@Url.Action("editType", "API")',
+                    type: 'POST',
+                    data: {
+                        ID: saveID,
+                        Name: $('#inputType').val()
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            loadData(inputSearch.val(), currentPage);
+                            $('#staticBackdrop').modal('hide');
+                        } else {
+                            process(false, 'Sửa')
+                            textDanger(res.msg)
+                        }
+                    }
+                });
+            }
+        });
+
+        function createModal(title, content, ok, cancel) {
+            $('.modal-title').text(title)
+            $('.modal-body').empty().append(content)
+            $('#btnOk').removeClass('disabled')
+            $('#btnOk').text(ok)
+            $('#btnCancel').removeClass('disabled')
+            $('#btnCancel').text(cancel)
+        }
+        function process(isLoad, text) {
+            if (isLoad) {
+                $('#btnOk').empty().addClass('disabled').append('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+                $('#btnCancel').addClass('disabled')
+            } else {
+                $('#btnOk').empty().removeClass('disabled').text(text)
+                $('#btnCancel').removeClass('disabled')
+            }
+        }
+        function textDanger(text) {
+            $('.modal-body').find('.text-danger').remove();
+            $('.modal-body').append(`<span class="text-danger">${text}</span>`)
+        }
+        function columnInTable(id, name) {
+            return `<tr data-id='${id}'>
+                        <td>${id}</td>
+                        <td class="name-type">${name}</td>
+                        <td class="actions">
+                            <button type="button"
+                                    id="btnEdit"
+                                    class="btn btn-rounded btn-inverse-success social-icon-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#staticBackdrop">
+                                <i class="mdi mdi-pencil"></i>
+                            </button>
+                            <button type="button" class="btn btn-rounded btn-inverse-danger social-icon-btn">
+                                <i class="mdi mdi-delete"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+        }
+    </script>
+}

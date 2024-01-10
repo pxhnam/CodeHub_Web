@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="160px" height="25px" viewBox="0 0 50 25" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Logo</title>
+    <g id="Logo" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" font-family="Montserrat-SemiBold, Montserrat SemiBold" font-size="32" font-weight="500">
+        <text id="Label.">
+            <tspan x="-55" y="24" fill="#575DFA">CodeHub</tspan>
+			<tspan x="20" y="20" font-family="Montserrat-Black, Montserrat Black" font-weight="700" fill="#DB504A" font-size="12">
+				&lt;/&gt;
+			</tspan>
+        </text>
+    </g>
+</svg>

@@ -1,0 +1,225 @@
+﻿
+@{
+    ViewBag.Title = "UserRequest";
+}
+
+<div class="row">
+    <div class="col-12 py-5">
+        <h4>Yêu Cầu Khách Hàng</h4>
+    </div>
+</div>
+<div class="row table-bordered">
+    <div class="col-lg-12">
+        <div class="grid">
+            <p class="grid-header">Danh Sách Yêu Cầu</p>
+            <div class="item-wrapper d-flex justify-content-center align-items-center">
+                <div class="table-responsive col-lg-12">
+                    <label for="startDateInput">Lọc ngày:</label>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="form-group mb-0">
+                            <input type="date" id="startDateInput" class="form-control" style="max-width:180px">
+                        </div>
+                        <div style="height: 2px; width: 5px; background-color: #616161" class="mx-3"></div>
+                        <div class="form-group mb-0">
+                            <input type="date" id="endDateInput" class="form-control" style="max-width:180px">
+                        </div>
+                        <div class="form-group mb-0 ml-3">
+                            <button type="button" class="btn btn-dark" id="btnFilter" style="height: 32px">Lọc</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputSearch">Tìm kiếm</label>
+                        <input type="text" class="form-control" id="inputSearch" placeholder="Nhập từ khóa..." style="max-width:300px">
+                    </div>
+                    <table class="table info-table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Tên dự án</th>
+                                <th>Ngày đăng</th>
+                                <th>Trạng thái</th>
+                                <th>Chi tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center align-items-center py-5">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script type="text/javascript">
+        let typingTimer;
+        const inputSearch = $('#inputSearch');
+        const startDate = $('#startDateInput');
+        const endDate = $('#endDateInput');
+        var currentPage = 1;
+        $(document).ready(function () {
+            loadData(inputSearch.val(), currentPage, startDate.val(), endDate.val());
+
+        });
+        $('#btnFilter').on('click', function () {
+            loadData(inputSearch.val(), currentPage, startDate.val(), endDate.val());
+        })
+        function loadData(search, page, start, end) {
+            $('tbody').empty();
+            $.ajax({
+                url: '@Url.Action("getRequests", "API")',
+                type: 'POST',
+                data: { search, page, start, end },
+                success: function (res) {
+                    if (res.success) {
+                        $('.table-responsive').find('.text-notification').remove();
+                        $('.pagination').empty();
+                        if (res.list.length > 0) {
+                            $.each(res.list, (index, item) => {
+                                $('tbody').append(columnInTable
+                                    (
+                                        item.ID,
+                                        item.Username,
+                                        item.Infor,
+                                        item.Name,
+                                        item.Date,
+                                        item.Status
+                                    ));
+                            });
+                            if (res.numPage > 1) {
+                                for (i = 1; i <= res.numPage; i++) {
+                                    $('.pagination').append(`<li class="page-item${i == currentPage ? ' active' : ' '}"><a class="page-link" href="#">${i}</a></li>`);
+                                }
+                            }
+                        } else {
+                            $('.table-responsive').append(`<p class="text-center text-notification">Không tìm thấy !</p>`)
+                        }
+                    } else {
+                    }
+                }
+            })
+        }
+        $(document).on('click', '#btnInfor', function () {
+            let id = $(this).closest('tr').data('id');
+            $.ajax({
+                url: '/API/getRequest',
+                type: 'POST',
+                data: { id },
+                success: function (res) {
+                    if (res.success) {
+                        let textStatus = '';
+                        if (res.request.Status == -1) {
+                            textStatus = 'Đã từ chối'
+                        }else if (res.request.Status == 0) {
+                            textStatus = 'Chờ xác nhận'
+                        } else if (res.request.Status == 1) {
+                            textStatus = 'Đang xử lý'
+                        } else if (res.request.Status == 2) {
+                            textStatus = 'Đã xong'
+                        }
+                        showModal(res.request.Name.toUpperCase(),
+                            `<strong>Trạng thái: </strong>
+                            ${textStatus}
+                            <br/>
+                            <strong>Ngày đăng: </strong> ${formatDateFromUnixTime(res.request.CreatedDate)}
+                            <br/>
+                            <strong>Mô tả chi tiết: </strong> ${res.request.Description}`,
+                            'OK', 'Hủy');
+                    }
+                }
+            });
+        });
+        $('#btnOk').on('click', () => {
+            $('#staticBackdrop').modal('hide');
+        });
+        $(document).on('click', '#btnConfirm', function () {
+            let parent = $(this).closest('tr');
+            let id = parent.data('id');
+            $.ajax({
+                url: '/API/updateStatusRequest',
+                type: 'POST',
+                data: { id, status: 1 },
+                success: function (res) {
+                    parent.find('.status').empty().html(loadStatus(res.status));
+                }
+            })
+        });
+        $(document).on('click', '#btnRefuse', function () {
+            let parent = $(this).closest('tr');
+            let id = parent.data('id');
+            $.ajax({
+                url: '/API/updateStatusRequest',
+                type: 'POST',
+                data: { id, status: 0 },
+                success: function (res) {
+                    parent.find('.status').empty().html(loadStatus(res.status));
+                }
+            })
+        });
+        $(document).on('click', '#btnDone', function () {
+            let parent = $(this).closest('tr');
+            let id = parent.data('id');
+            $.ajax({
+                url: '/API/updateStatusRequest',
+                type: 'POST',
+                data: { id, status: 1 },
+                success: function (res) {
+                    parent.find('.status').empty().html(loadStatus(res.status));
+                }
+            })
+        });
+        inputSearch.on('input', function () {
+            currentPage = 1;
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(function () {
+                loadData(inputSearch.val(), currentPage, startDate.val(), endDate.val());
+            }, 500);
+        });
+        $('.pagination').on('click', 'li', function (e) {
+            e.preventDefault();
+            currentPage = $(this).text();
+            loadData(inputSearch.val(), currentPage, startDate.val(), endDate.val());
+        })
+        function showModal(title, content, ok, cancel) {
+            $('.modal-dialog').addClass('modal-xl')
+            $('.modal-title').text(title)
+            $('.modal-body').empty().append(content)
+            $('#btnOk').text(ok)
+            $('#btnCancel').text(cancel)
+        }
+        function loadStatus(status) {
+            switch (status) {
+                case -1: return 'Đã từ chối';
+                case 0:
+                    return `<button id="btnRefuse" type="button" class="btn btn-inverse-dark btn-xs">Từ chối</button>
+                    <button id="btnConfirm" type="button" class="btn btn-inverse-success btn-xs">Xác nhận</button>`;
+                case 1: return '<button id="btnDone" type="button" class="btn btn-inverse-primary btn-xs">Xong</button>';
+                case 2: return 'Đã xong';
+                default: break;
+            }  
+        }
+        function columnInTable(id, username, info, name, date, status) {
+            return `<tr data-id='${id}'>
+                        <td title='${info}'>${username}</td>
+                        <td>${name}</td>
+                        <td>${formatDateFromUnixTime(date)}</td>
+                        <td class='p-0 status'>${loadStatus(status)}</td>
+                        <td>
+                            <button id='btnInfor' class="btn btn-inverse-info btn-rounded social-icon-btn"
+                            data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                              <i class="mdi mdi-information-outline"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+        }
+        function formatDateFromUnixTime(unixTime) {
+            var date = new Date(parseInt(unixTime.substr(6)));
+            var formattedDate = `${("0" + date.getHours()).slice(-2)}:${("0" + date.getMinutes()).slice(-2)} ${("0" + date.getDate()).slice(-2)}-${("0" + (date.getMonth() + 1)).slice(-2)}-${date.getFullYear()}`;
+            return formattedDate;
+        }
+    </script>
+}

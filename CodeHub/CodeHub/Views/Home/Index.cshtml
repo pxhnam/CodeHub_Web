@@ -1,0 +1,293 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+<style>
+    .grid.shadow {
+        user-select: none;
+    }
+
+    .text-coin {
+        color: #ffd800;
+    }
+
+    .text-source {
+        color: #8692F7;
+    }
+</style>
+<div class="row">
+    <div class="col-12 py-5">
+        <h4>Dashboard</h4>
+        <p class="text-gray">Welcome aboard, <span class="user-name"></span></p>
+    </div>
+</div>
+
+<div class="table-bordered py-3">
+    <p class="text-center">Thống Kê Theo</p>
+    <div class="form-group d-flex justify-content-center">
+        <select id="selectType" class="form-control custom-select" name="TypeID" style="width:85px">
+            <option value="0" selected>Ngày</option>
+            <option value="1">Tháng</option>
+            <option value="2">Năm</option>
+        </select>
+    </div>
+    <div>
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-3 col-sm-6 col-6 equel-grid">
+                <div class="grid shadow">
+                    <div class="grid-body text-gray">
+                        <div class="d-flex justify-content-between">
+                            <p>TỔNG HÓA ĐƠN</p>
+                            <p class="date">Ngày</p>
+                        </div>
+                        <p class="text-black total-order"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 col-6 equel-grid">
+                <div class="grid shadow">
+                    <div class="grid-body text-gray">
+                        <div class="d-flex justify-content-between">
+                            <p>TỔNG XU NẠP</p>
+                            <p class="date">Ngày</p>
+                        </div>
+                        <p class="text-black total-coin"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 col-6 equel-grid">
+                <div class="grid shadow">
+                    <div class="grid-body text-gray">
+                        <div class="d-flex justify-content-between">
+                            <p>TỔNG XU GIAO DỊCH</p>
+                            <p class="date">Ngày</p>
+                        </div>
+                        <p class="text-black total-deposit"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-3 col-sm-6 col-6 equel-grid">
+                <div class="grid shadow" title="Người dùng có nhiều hóa đơn nhất">
+                    <div class="grid-body text-gray">
+                        <div class="d-flex justify-content-between">
+                            <p>TOP BILL</p>
+                            <p class="count-bill"></p>
+                        </div>
+                        <p class="text-black name-bill"></p>
+                        <div class="wrapper w-50 mt-4">
+                            <div class="chartjs-size-monitor" style="position: absolute; inset: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+                            <canvas height="15" id="stat-line_2" width="100" style="display: block; width: 100px; height: 15px;" class="chartjs-render-monitor"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 col-6 equel-grid">
+                <div class="grid shadow" title="Người dùng nạp nhiều nhất">
+                    <div class="grid-body text-gray">
+                        <div class="d-flex justify-content-between">
+                            <p>TOP NẠP</p>
+                            <p class="total-up"></p>
+                        </div>
+                        <p class="text-black name-up"></p>
+                        <div class="wrapper w-50 mt-4">
+                            <div class="chartjs-size-monitor" style="position: absolute; inset: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+                            <canvas height="15" id="stat-line_3" width="100" style="display: block; width: 100px; height: 15px;" class="chartjs-render-monitor"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 col-6 equel-grid">
+                <div class="grid shadow" title="Người dùng có tổng số xu giao dịch nhiều nhất">
+                    <div class="grid-body text-gray">
+                        <div class="d-flex justify-content-between">
+                            <p>TOP GIAO DỊCH</p>
+                            <p class="top-deposit"></p>
+                        </div>
+                        <p class="text-black name-deposit"></p>
+                        <div class="wrapper w-50 mt-4">
+                            <div class="chartjs-size-monitor" style="position: absolute; inset: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+                            <canvas height="15" id="stat-line_4" width="100" style="display: block; width: 100px; height: 15px;" class="chartjs-render-monitor"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* TOP XU *@
+<div class="table-bordered py-3 mt-5">
+    <h3 class="text-center text-gray mb-3">TOP XU</h3>
+    <div class="top-coin">
+        <div class="row d-flex justify-content-center"></div>
+    </div>
+</div>
+
+
+@* TOP SOURCE *@
+<div class="table-bordered py-3 mt-5">
+    <h3 class="text-center mb-3 text-gray">TOP CODE</h3>
+    <div class="top-coder">
+        <div class="row d-flex justify-content-center"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            init(0);
+            topCoin();
+            topCoder();
+        });
+        function topOrder(value) {
+            $.ajax({
+                url: '/API/topOrder',
+                type: 'POST',
+                data: { value },
+                success: function (res) {
+                    if (res.success) {
+                        $('.count-bill').text('+ ' + res.user.Count);
+                        $('.name-bill').text(res.user.FullName.toUpperCase());
+                    }
+                }
+            });
+        }
+        function totalOrder(value) {
+            $.ajax({
+                url: '/API/totalOrder',
+                type: 'POST',
+                data: { value },
+                success: function (res) {
+                    if (res.success) {
+                        $('.total-order').text('+ ' + res.count);
+                    }
+                }
+            });
+        }
+        function totalCoin(value) {
+            $.ajax({
+                url: '/API/totalCoin',
+                type: 'POST',
+                data: { value },
+                success: function (res) {
+                    if (res.success) {
+                        $('.total-coin').text('+ ' + convertNumber(res.sum) + ' xu');
+                    } else $('.total-coin').text('+ 0 xu');
+                }
+            });
+        }
+        function totalDeposit(value) {
+            $.ajax({
+                url: '/API/totalDeposit',
+                type: 'POST',
+                data: { value },
+                success: function (res) {
+                    if (res.success) {
+                        $('.total-deposit').text(`${convertNumber(res.sum)} xu`);
+                    } else {
+                        $('.total-deposit').text('0 xu');
+                    }
+                }
+            });
+        }
+        function topUp(value) {
+            $.ajax({
+                url: '/API/topUpCoin',
+                type: 'POST',
+                data: { value },
+                success: function (res) {
+                    if (res.success) {
+                        $('.total-up').text(`+ ${convertNumber(res.user.Total)} xu`);
+                        $('.name-up').text(res.user.FullName.toUpperCase());
+                    } else {
+                        $('.total-up').text('+ 0 xu');
+                        $('.name-up').text('');
+                    }
+                }
+            });
+        }
+        function topDeposit(value) {
+            $.ajax({
+                url: '/API/topDeposit',
+                type: 'POST',
+                data: { value },
+                success: function (res) {
+                    if (res.success) {
+                        $('.top-deposit').text(`${convertNumber(res.user.Total)} xu`);
+                        $('.name-deposit').text(res.user.FullName.toUpperCase());
+                    } else {
+                        $('.top-deposit').text('0 xu');
+                        $('.name-deposit').text('');
+                    }
+                }
+            });
+        }
+        function topCoin() {
+            $.ajax({
+                url: '/API/topCoin',
+                type: 'POST',
+                success: function (res) {
+                    if (res.success) {
+                        $.each(res.users, (index, item) => {
+                            $('.top-coin .row').append(`<div class="col-md-3 col-sm-6 col-6 equel-grid">
+                                                       <div class="grid shadow">
+                                                           <div class="grid-body text-gray">
+                                                               <div class="d-flex justify-content-center">
+                                                                   <p>TOP ${index+1}</p>
+                                                               </div>
+                                                               <p class="text-black text-center">${item.FullName}</p>
+                                                               <p class="text-center text-coin">${convertNumber(item.Currency)} xu</p>
+                                                           </div>
+                                                       </div>
+                                                   </div>`);
+                        });
+                        console.log(res);
+                    } else {}
+                }
+            });
+        }
+        function topCoder() {
+            $.ajax({
+                url: '/API/topCoder',
+                type: 'POST',
+                success: function (res) {
+                    if (res.success) {
+                        $.each(res.coders, (index, item) => {
+                            $('.top-coder .row').append(`<div class="col-md-3 col-sm-6 col-6 equel-grid">
+                                                             <div class="grid shadow">
+                                                                 <div class="grid-body text-gray">
+                                                                     <div class="d-flex justify-content-center">
+                                                                         <p>TOP ${index+1}</p>
+                                                                     </div>
+                                                                     <p class="text-black text-center">${item.FullName}</p>
+                                                                     <p class="text-center text-source">${item.Count}</p>
+                                                                 </div>
+                                                             </div>
+                                                         </div>`);
+                        });
+                        console.log(res);
+                    } else { }
+                }
+            });
+        }
+        $('#selectType').change(function () {
+            $('.date').text($(this).find('option:selected').text());
+            init($(this).val());
+        });
+        function init(value) {
+            topOrder(value);
+            topUp(value);
+            topDeposit(value);
+            totalOrder(value);
+            totalCoin(value);
+            totalDeposit(value);
+        }
+        function convertNumber(number) {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+    </script>
+}

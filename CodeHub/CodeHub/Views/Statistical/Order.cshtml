@@ -1,0 +1,128 @@
+﻿
+@{
+    ViewBag.Title = "Order";
+}
+<div class="row">
+    <div class="col-12 py-5">
+        <h4>Hóa Đơn</h4>
+    </div>
+</div>
+<div class="row table-bordered">
+    <div class="col-lg-12">
+        <div class="grid">
+            <p class="grid-header">Danh sách hóa đơn</p>
+            <div class="item-wrapper d-flex justify-content-center align-items-center">
+                <div class="table-responsive col-lg-12">
+                    <label for="startDateInput">Lọc ngày:</label>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="form-group mb-0">
+                            <input type="date" id="startDateInput" class="form-control" style="max-width:180px">
+                        </div>
+                        <div style="height: 2px; width: 5px; background-color: #616161" class="mx-3"></div>
+                        <div class="form-group mb-0">
+                            <input type="date" id="endDateInput" class="form-control" style="max-width:180px">
+                        </div>
+                        <div class="form-group mb-0 ml-3">
+                            <button type="button" class="btn btn-dark" id="btnFilter" style="height: 32px">Lọc</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputSearch">Tìm kiếm</label>
+                        <input type="text" class="form-control" id="inputSearch" placeholder="Nhập từ khóa..." style="max-width:300px">
+                    </div>
+                    <table class="table info-table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Code</th>
+                                <th>Ngày tạo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center align-items-center py-5">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script type="text/javascript">
+        let typingTimer;
+        const inputSearch = $('#inputSearch');
+        const startDate = $('#startDateInput');
+        const endDate = $('#endDateInput');
+        var currentPage = 1;
+        $(document).ready(function () {
+            loadData(inputSearch.val(), currentPage, startDate.val(), endDate.val());
+        });
+
+        function loadData(search, page, start, end) {
+            $('tbody').empty();
+            $.ajax({
+                url: '@Url.Action("getOrders", "API")',
+                type: 'POST',
+                data: { search, page, start, end },
+                success: function (res) {
+                    if (res.success) {
+                        $('.table-responsive').find('.text-notification').remove();
+                        $('.pagination').empty();
+                        if (res.list.length > 0) {
+                            $.each(res.list, (index, item) => {
+                                $('tbody').append(columnInTable
+                                    (
+                                        item.Username,
+                                        item.Infor,
+                                        item.Code,
+                                        item.Date
+                                    ));
+                            });
+                            if (res.numPage > 1) {
+                                for (i = 1; i <= res.numPage; i++) {
+                                    $('.pagination').append(`<li class="page-item${i == currentPage ? ' active' : ' '}"><a class="page-link" href="#">${i}</a></li>`);
+                                }
+                            }
+                        } else {
+                            $('.table-responsive').append(`<p class="text-center text-notification">Không tìm thấy !</p>`)
+                        }
+                    } else {
+                    }
+                }
+            })
+        }
+        $('#btnFilter').on('click', function () {
+            loadData(inputSearch.val(), currentPage, startDate.val(), endDate.val());
+        })
+        inputSearch.on('input', function () {
+            currentPage = 1;
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(function () {
+                loadData(inputSearch.val(), currentPage, startDate.val(), endDate.val());
+            }, 500);
+        });
+
+        $('.pagination').on('click', 'li', function (e) {
+            e.preventDefault();
+            currentPage = $(this).text();
+            loadData(inputSearch.val(), currentPage, startDate.val(), endDate.val());
+         })
+
+        function columnInTable(username, infor, code, date) {
+            return `<tr>
+                        <td title='${infor}'>${username}</td>
+                        <td>${code}</td>
+                        <td>${formatDateFromUnixTime(date)}</td>
+                    </tr>`;
+        }
+        function formatDateFromUnixTime(unixTime) {
+            var date = new Date(parseInt(unixTime.substr(6)));
+            var formattedDate = `${("0" + date.getHours()).slice(-2)}:${("0" + date.getMinutes()).slice(-2)} ${("0" + date.getDate()).slice(-2)}-${("0" + (date.getMonth() + 1)).slice(-2)}-${date.getFullYear()}`;
+            return formattedDate;
+        }
+    </script>
+}

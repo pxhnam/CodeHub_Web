@@ -1,0 +1,199 @@
+﻿
+@{
+    ViewBag.Title = "Tải lên Source";
+}
+@if (ViewBag.Datares != null)
+{
+    <div>
+        <h4>Imgur res:</h4>
+        <p>@ViewBag.Datares</p>
+    </div>
+}
+<div class="row d-flex justify-content-center align-items-center">
+    <div class="col-lg-8 table-bordered">
+        <div class="grid">
+            <p class="grid-header">Upload Code</p>
+            <div class="grid-body">
+                <div class="item-wrapper">
+                    <form id="submitForm" enctype="multipart/form-data">
+                        <input id="inputID" name="id" hidden />
+
+                        <div class="form-group text-center">
+                            <p class="text-danger" id="res-warning"></p>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputName">Tên dự án: </label>
+                            <input type="text" class="form-control" id="inputName" name="Name" placeholder="Nhập tên dự án" autocomplete="off">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="selectLanguage">Ngôn ngữ lập trình: </label>
+                            <select id="selectLanguage" class="form-control custom-select" name="LanguageID" style="width:120px">
+                                <option value="0" selected>---</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="selectType">Thể loại: </label>
+                            <select id="selectType" class="form-control custom-select" name="TypeID" style="width:120px">
+                                <option value="0" selected>---</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="imageFiles">Tải ảnh: </label>
+                            <div id="uploadImage" class="btn btn-xs btn-inverse-info">
+                                <i class="mdi mdi-image-multiple"></i>
+                            </div>
+                            <input type="file" id="imageFiles" name="imageFiles" class="d-none" accept="image/*" multiple />
+                            <span class="m-3" id="countImageUpload"></span>
+                            <p id="linkPreview"></p>
+                            <div id="previewImages"
+                                 class="d-flex justify-content-center align-items-center flex-wrap"
+                                 style="border-radius: 8px; border: 1px solid #f2f4f9;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputUrl">Tải video: </label>
+                            <div id="uploadVideo" class="btn btn-xs btn-inverse-info">
+                                <i class="mdi mdi-video"></i>
+                            </div>
+                            <input type="file" id="videoFile" name="videoFile" multiple class="d-none" accept="video/*" />
+                            <span class="m-3" id="countVideoUpload"></span>
+                            <input type="text" class="form-control" id="inputUrl" name="LinkVideo" placeholder="Nhập đường dẫn video" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputFee">Mức phí: </label>
+                            <input type="number" class="form-control" id="inputFee" name="Fee" placeholder="Nhập xu">
+                            <p class="text-right" style="color: #ccc">1 xu = 1.000 vnđ</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputLink">Link code: </label>
+                            <input type="text" class="form-control" id="inputLink" name="SourceLink" placeholder="Nhập đường dẫn tải source" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputDescription">Mô tả: </label>
+                            <textarea class="form-control" id="inputDescription" name="Description" cols="12" rows="5"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-sm btn-primary">Lưu</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            let urlParams = new URLSearchParams(window.location.search);
+            let idParams = urlParams.get('id');
+            $('#inputID').val(idParams !== null ? idParams : 0);
+
+            $.when(
+                insertSelect('@Url.Action("getTypes", "API")', '#selectType'),
+                insertSelect('@Url.Action("getLanguages", "API")', '#selectLanguage')
+            ).then(function () {
+                loadDataByID(idParams);
+            }).catch(function (error) {
+                console.error(error);
+            });
+        });
+        function loadDataByID(idParams) {
+            if (idParams !== null) {
+                $.ajax({
+                    url: '/API/getSource',
+                    type: 'POST',
+                    data: { id: idParams },
+                    success: function (res) {
+                        if (res.success) {
+                            $('#inputName').val(res.source.Name);
+                            //$('#countImageUpload').text('đã tải lên ' + res.source.countImage + ' ảnh');
+                            $('#inputUrl').val(res.source.LinkVideo);
+                            $('#inputFee').val(res.source.Fee);
+                            $('#inputLink').val(res.source.SourceLink);
+                            $('#inputDescription').text(res.source.Description);
+                            let urls = 'Xem hình: ';
+                            $.each(res.source.images, function (index, item) {
+                                urls += `<a href="${item.Url}" target="_blank">Hình ${index + 1}</a>, `;
+                            });
+                            $('#linkPreview').append(urls.slice(0, -2));
+                            $('#selectType').val(res.source.Type);
+                            $('#selectLanguage').val(res.source.Language);
+                        }
+                    }
+                });
+            }
+        }
+        $('#uploadImage').on('click', function () {
+            $('#imageFiles').click();
+        });
+        $('#uploadVideo').on('click', function () {
+            $('#videoFile').click();
+        });
+        $('#videoFile').on('change', function () {
+            $('#countVideoUpload').text('đã tải lên ' + $(this)[0].files.length + ' video');
+        });
+        //xử lý tải ảnh
+        $('#imageFiles').on('change', function () {
+            let files = $(this)[0].files;
+            let preview = $('#previewImages');
+
+            $('#countImageUpload').text('đã tải lên ' + files.length + ' ảnh');
+            preview.empty();
+
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i];
+                let reader = new FileReader();
+
+                reader.onload = function (e) {
+                    preview.append('<img class="m-2" src="' + e.target.result + '" class="preview-image" height="180" style="border-radius: 8px"/>');
+                };
+
+                reader.readAsDataURL(file);
+            }
+        });
+        //Xử lý submit form
+        $('#submitForm').submit(function (e) {
+            e.preventDefault();
+            $('#res-warning').text('');
+            var formData = new FormData($(this)[0]);
+            $.ajax({
+                url: '@Url.Action("UploadCode", "API")',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    if (res.success) {
+                        window.location.href = '@Url.Action("Repository", "Source")';
+                    } else {
+                        $('#res-warning').text(res.message);
+                        $("html, body").animate({ scrollTop: 0 }, "slow");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error(`xhr: ${xhr}, status: ${status}, error: ${error}`);
+                }
+            });
+        });
+        function insertSelect(url, target) {
+            return $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    search: '',
+                    page: 0
+                },
+            }).then(function (res) {
+                if (res.success) {
+                    $.each(res.list, function (index, value) {
+                        $(target).append(`<option value="${value.ID}">${value.Name}</option>`);
+                    })
+                }
+            }).catch(function (error) {
+                console.error(error);
+            });
+        }
+    </script>
+}

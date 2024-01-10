@@ -1,0 +1,145 @@
+﻿
+@{
+    ViewBag.Title = "Customer";
+}
+
+<div class="row">
+    <div class="col-12 py-5">
+        <h4>Khách Hàng</h4>
+    </div>
+</div>
+<div class="row table-bordered">
+    <div class="col-lg-12">
+        <div class="grid">
+            <p class="grid-header">Danh sách khách hàng</p>
+            <div class="item-wrapper d-flex justify-content-center align-items-center">
+                <div class="table-responsive col-lg-12">
+                    <div class="form-group">
+                        <label for="inputSearch">Tìm kiếm</label>
+                        <input type="text" class="form-control" id="inputSearch" placeholder="Nhập từ khóa..." style="max-width:300px">
+                    </div>
+                    <table class="table info-table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Họ và tên</th>
+                                <th>Giới tính</th>
+                                <th>Ngày sinh</th>
+                                <th>Xu</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center align-items-center py-5">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script type="text/javascript">
+        let typingTimer;
+        const inputSearch = $('#inputSearch');
+        var currentPage = 1;
+        $(document).ready(function () {
+            loadData(inputSearch.val(), currentPage);
+            
+        });
+        function loadData(search, page) {
+            $('tbody').empty();
+            $.ajax({
+                url: '@Url.Action("getCustomers", "API")',
+                type: 'POST',
+                data: { search, page },
+                success: function (res) {
+                    if (res.success) {
+                        $('.table-responsive').find('.text-notification').remove();
+                        $('.pagination').empty();
+                        if (res.list.length > 0) {
+                            $.each(res.list, (index, item) => {
+                                $('tbody').append(columnInTable
+                                    (
+                                        item.ID,
+                                        item.Username,
+                                        item.FullName,
+                                        item.Sex,
+                                        item.DateOfBirth,
+                                        item.Email,
+                                        item.Coin,
+                                        item.IsActive
+                                    ));
+                            });
+                            if (res.numPage > 1) {
+                                for (i = 1; i <= res.numPage; i++) {
+                                    $('.pagination').append(`<li class="page-item${i == currentPage ? ' active' : ' '}"><a class="page-link" href="#">${i}</a></li>`);
+                                }
+                            }
+                        } else {
+                            $('.table-responsive').append(`<p class="text-center text-notification">Không tìm thấy !</p>`)
+                        }
+                    } else {
+                    }
+                }
+            })
+        }
+        $(document).on('click', '#btnActive', function () {
+            let $this = $(this);
+            $.ajax({
+                url: '/API/handleActive',
+                type: 'POST',
+                data: { id: $this.closest('tr').data('id') },
+                success: function (res) {
+                    if (res.success) {
+                        $this.toggleClass('btn-inverse-success btn-inverse-danger');
+                        $this.text((_, text) => {
+                            return text === 'Bình thường' ? 'Khóa' : 'Bình thường';
+                        });
+                    }
+                }
+            })
+        });
+        inputSearch.on('input', function () {
+            currentPage = 1;
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(function () {
+                loadData(inputSearch.val(), currentPage);
+            }, 500);
+        });
+
+        $('.pagination').on('click', 'li', function (e) {
+            e.preventDefault();
+            currentPage = $(this).text();
+            loadData(inputSearch.val(), currentPage);
+         })
+
+        function columnInTable(id,username, fullname, sex, dob, email, coin, isActive) {
+            return `<tr data-id='${id}'>
+                        <td title='${email}'>${username}</td>
+                        <td>${fullname}</td>
+                        <td>${sex}</td>
+                        <td>${convertDate(dob)}</td>
+                        <td>${coin}</td>
+                        <td>${isActive ?
+                              '<button id="btnActive" type="button" class="btn btn-inverse-success btn-xs">Bình thường</button>'
+                              :
+                              '<button id="btnActive" type="button" class="btn btn-inverse-danger btn-xs">Khóa</button>'}
+                        </td>
+                    </tr>`;
+        }
+        function convertDate(dateString) {
+            var timestamp = parseInt(dateString.match(/\d+/)[0]);
+            var date = new Date(timestamp);
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            var year = date.getFullYear();
+            var formattedDate = day + '-' + month + '-' + year;
+            return formattedDate;
+        }
+    </script>
+}
